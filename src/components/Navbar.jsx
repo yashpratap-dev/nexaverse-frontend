@@ -37,8 +37,9 @@ export default function Navbar() {
       {/* Nav Links */}
       <div style={{ display: 'flex', gap: 28 }}>
         {[
-          { label: 'Worlds', path: '/worlds' },
-          { label: 'Avatars', path: '/avatars' },
+          { label: 'Worlds',    path: '/worlds' },
+          { label: 'Avatars',   path: '/avatars' },
+          { label: 'AI Chat',   path: '/ai-chat' },
           { label: 'Dashboard', path: '/dashboard' },
         ].map(link => (
           <Link
@@ -69,7 +70,7 @@ export default function Navbar() {
 
         {/* Theme Buttons */}
         {[
-          { id: 'nature', label: '🌿 Fairytale' },
+          { id: 'nature',  label: '🌿 Fairytale' },
           { id: 'destroy', label: '🔥 Hell' }
         ].map(t => (
           <button
@@ -94,13 +95,12 @@ export default function Navbar() {
           >{t.label}</button>
         ))}
 
-        {/* Auth buttons */}
+        {/* Auth */}
         {user ? (
           <>
             <div style={{
               fontFamily: "'Share Tech Mono',monospace", fontSize: 11,
-              color: 'rgba(0,255,200,0.6)', letterSpacing: 2,
-              padding: '0 8px'
+              color: 'rgba(0,255,200,0.6)', letterSpacing: 2, padding: '0 8px'
             }}>
               👤 {user.username}
             </div>
@@ -123,8 +123,7 @@ export default function Navbar() {
           <>
             <Link to="/login" style={{ textDecoration: 'none' }}>
               <button
-                onMouseEnter={playHover}
-                onClick={playClick}
+                onMouseEnter={playHover} onClick={playClick}
                 style={{
                   fontFamily: "'Share Tech Mono',monospace", fontSize: 11,
                   letterSpacing: 2, padding: '7px 16px',
@@ -140,8 +139,7 @@ export default function Navbar() {
             </Link>
             <Link to="/register" style={{ textDecoration: 'none' }}>
               <button
-                onMouseEnter={playHover}
-                onClick={playClick}
+                onMouseEnter={playHover} onClick={playClick}
                 style={{
                   fontFamily: "'Share Tech Mono',monospace", fontSize: 11,
                   letterSpacing: 2, padding: '7px 16px',

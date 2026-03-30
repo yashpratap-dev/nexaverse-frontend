@@ -7,11 +7,17 @@ import WorldsPage from './pages/WorldsPage'
 import WorldRoomPage from './pages/WorldRoomPage'
 import AvatarsPage from './pages/AvatarsPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import AiChatPage from './pages/AiChatPage'
+
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+          <Route path="/ai-chat" element={
+            <ProtectedRoute><AiChatPage /></ProtectedRoute>
+          } />
+          <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
