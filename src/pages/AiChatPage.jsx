@@ -44,19 +44,8 @@ export default function AiChatPage() {
 
   // Get userId from backend
   useEffect(() => {
-    async function fetchUserId() {
-      try {
-        const res = await api.get('/api/users')
-        const users = res.data.data || []
-        const me = users.find(u => u.username === user?.username)
-        if (me) setUserId(me.id)
-      } catch (err) {
-        // fallback
-        setUserId(1)
-      }
-    }
-    fetchUserId()
-  }, [user])
+    setUserId(1)
+  }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
