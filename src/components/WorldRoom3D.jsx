@@ -62,15 +62,16 @@ const WORLD_CONFIGS = {
 function ForestDecorations() {
   const trees = useMemo(() => {
     const items = []
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 60; i++) {
       let x, z
       do {
         x = (Math.random() - 0.5) * 180
         z = (Math.random() - 0.5) * 180
-      } while (Math.abs(x) < 8 && Math.abs(z) < 8)
-      const scale = 0.6 + Math.random() * 1.2
-      const variant = Math.floor(Math.random() * 3)
-      items.push({ x, z, scale, variant })
+      } while (Math.abs(x) < 10 && Math.abs(z) < 10)
+      const scale = 0.8 + Math.random() * 1.8
+      const variant = Math.floor(Math.random() * 4)
+      const hue = 0.28 + Math.random() * 0.08
+      items.push({ x, z, scale, variant, hue })
     }
     return items
   }, [])
@@ -79,46 +80,112 @@ function ForestDecorations() {
     <group>
       {trees.map((t, i) => (
         <group key={i} position={[t.x, 0, t.z]} scale={t.scale}>
-          <mesh position={[0, 1.2, 0]} castShadow>
-            <cylinderGeometry args={[0.2, 0.35, 2.4, 7]} />
-            <meshStandardMaterial color="#3a1a00" roughness={0.9} />
+          {/* Trunk */}
+          <mesh position={[0, 1.5, 0]} castShadow>
+            <cylinderGeometry args={[0.22, 0.32, 3, 7]} />
+            <meshStandardMaterial color="#2d1a00" roughness={1} />
           </mesh>
+
+          {/* Roots */}
+          {[0,1,2,3].map(r => (
+            <mesh key={r} position={[
+              Math.cos(r * Math.PI/2) * 0.4, 0.2,
+              Math.sin(r * Math.PI/2) * 0.4
+            ]} rotation={[0, r * Math.PI/2, 0.4]}>
+              <cylinderGeometry args={[0.08, 0.15, 0.8, 5]} />
+              <meshStandardMaterial color="#2d1a00" roughness={1} />
+            </mesh>
+          ))}
+
+          {/* Leaves - layered cones for minecraft feel */}
           {t.variant === 0 && (
             <>
-              <mesh position={[0, 4, 0]} castShadow>
-                <coneGeometry args={[2, 4, 8]} />
-                <meshStandardMaterial color="#1a5a1a" roughness={0.8} emissive="#002200" emissiveIntensity={0.2} />
+              <mesh position={[0, 5.5, 0]} castShadow>
+                <coneGeometry args={[2.8, 3.5, 7]} />
+                <meshStandardMaterial color={`hsl(${t.hue * 360}, 60%, 18%)`} roughness={0.9} emissive={`hsl(${t.hue * 360}, 40%, 8%)`} emissiveIntensity={0.3} />
               </mesh>
-              <mesh position={[0, 6.5, 0]} castShadow>
-                <coneGeometry args={[1.4, 3, 8]} />
-                <meshStandardMaterial color="#22661a" roughness={0.8} emissive="#003300" emissiveIntensity={0.2} />
+              <mesh position={[0, 7.5, 0]} castShadow>
+                <coneGeometry args={[2.2, 3, 7]} />
+                <meshStandardMaterial color={`hsl(${t.hue * 360}, 65%, 22%)`} roughness={0.9} emissive={`hsl(${t.hue * 360}, 45%, 10%)`} emissiveIntensity={0.3} />
+              </mesh>
+              <mesh position={[0, 9.2, 0]} castShadow>
+                <coneGeometry args={[1.5, 2.5, 7]} />
+                <meshStandardMaterial color={`hsl(${t.hue * 360}, 70%, 25%)`} roughness={0.9} emissive={`hsl(${t.hue * 360}, 50%, 12%)`} emissiveIntensity={0.4} />
               </mesh>
             </>
           )}
           {t.variant === 1 && (
-            <mesh position={[0, 4.5, 0]} castShadow>
-              <sphereGeometry args={[2.2, 8, 8]} />
-              <meshStandardMaterial color="#1a6622" roughness={0.7} emissive="#002a00" emissiveIntensity={0.3} />
-            </mesh>
-          )}
-          {t.variant === 2 && (
             <>
-              <mesh position={[0, 3.5, 0]} castShadow>
-                <coneGeometry args={[2.5, 5, 6]} />
-                <meshStandardMaterial color="#0a4a0a" roughness={0.8} emissive="#001500" emissiveIntensity={0.2} />
+              <mesh position={[0, 5, 0]} castShadow>
+                <sphereGeometry args={[2.5, 8, 6]} />
+                <meshStandardMaterial color={`hsl(${t.hue * 360}, 55%, 20%)`} roughness={0.9} emissive={`hsl(${t.hue * 360}, 40%, 8%)`} emissiveIntensity={0.3} />
+              </mesh>
+              <mesh position={[0.8, 5.5, 0.8]} castShadow>
+                <sphereGeometry args={[1.5, 7, 5]} />
+                <meshStandardMaterial color={`hsl(${t.hue * 360}, 60%, 24%)`} roughness={0.9} />
               </mesh>
             </>
           )}
-          {/* Glowing mushroom near base */}
-          {Math.random() > 0.6 && (
-            <mesh position={[Math.random() - 0.5, 0.15, Math.random() - 0.5]}>
-              <sphereGeometry args={[0.2, 6, 6]} />
-              <meshStandardMaterial color="#00ff88" emissive="#00ff88" emissiveIntensity={0.8} />
-              <pointLight color="#00ff88" intensity={0.5} distance={3} />
-            </mesh>
+          {t.variant === 2 && (
+            <>
+              {[0,1,2,3].map(l => (
+                <mesh key={l} position={[0, 4 + l * 1.5, 0]} castShadow>
+                  <cylinderGeometry args={[2.5 - l * 0.4, 2.8 - l * 0.4, 0.8, 8]} />
+                  <meshStandardMaterial color={`hsl(${t.hue * 360}, 60%, ${18 + l * 3}%)`} roughness={0.9} emissive={`hsl(${t.hue * 360}, 40%, 8%)`} emissiveIntensity={0.3} />
+                </mesh>
+              ))}
+            </>
+          )}
+          {t.variant === 3 && (
+            <>
+              <mesh position={[0, 5, 0]} castShadow>
+                <coneGeometry args={[3, 4, 5]} />
+                <meshStandardMaterial color={`hsl(${t.hue * 360}, 50%, 16%)`} roughness={1} emissive={`hsl(${t.hue * 360}, 30%, 6%)`} emissiveIntensity={0.4} />
+              </mesh>
+              <mesh position={[0, 8, 0]} castShadow>
+                <coneGeometry args={[2, 3.5, 5]} />
+                <meshStandardMaterial color={`hsl(${t.hue * 360}, 55%, 20%)`} roughness={1} />
+              </mesh>
+              <mesh position={[0, 10.5, 0]} castShadow>
+                <coneGeometry args={[1.2, 2.5, 5]} />
+                <meshStandardMaterial color={`hsl(${t.hue * 360}, 60%, 24%)`} roughness={1} />
+              </mesh>
+            </>
+          )}
+
+          {/* Glowing mushrooms */}
+          {i % 4 === 0 && (
+            <group position={[Math.random()*1.5-0.75, 0, Math.random()*1.5-0.75]}>
+              <mesh position={[0, 0.15, 0]}>
+                <cylinderGeometry args={[0.06, 0.08, 0.3, 6]} />
+                <meshStandardMaterial color="#ddddcc" />
+              </mesh>
+              <mesh position={[0, 0.35, 0]}>
+                <sphereGeometry args={[0.2, 7, 5]} />
+                <meshStandardMaterial
+                  color={['#ff88aa', '#88ffcc', '#aaaaff', '#ffcc88'][i % 4]}
+                  emissive={['#ff88aa', '#88ffcc', '#aaaaff', '#ffcc88'][i % 4]}
+                  emissiveIntensity={0.8}
+                />
+              </mesh>
+              <pointLight
+                color={['#ff88aa', '#88ffcc', '#aaaaff', '#ffcc88'][i % 4]}
+                intensity={0.6}
+                distance={3}
+                position={[0, 0.5, 0]}
+              />
+            </group>
           )}
         </group>
       ))}
+
+      {/* Ground fog/mist particles */}
+      <Sparkles count={120} scale={[180, 3, 180]} size={3} speed={0.15} color="#88ffaa" opacity={0.4} />
+      {/* Fireflies */}
+      <Sparkles count={60} scale={[160, 12, 160]} size={1.5} speed={0.4} color="#ffffaa" opacity={0.7} />
+    </group>
+  )
+}
       {/* Fireflies */}
       <Sparkles count={80} scale={[160, 20, 160]} size={1.5} speed={0.3} color="#88ffaa" opacity={0.8} />
     </group>
@@ -480,11 +547,17 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
   return (
     <div style={{ width:'100%', height:'100%', position:'absolute', inset:0 }}>
       <AmbientSound worldType={worldType} active={true} />
-      <Canvas
-        shadows
-        camera={{ position:[0, 16, 20], fov:60 }}
-        gl={{ antialias:true, toneMapping:THREE.ACESFilmicToneMapping, toneMappingExposure:0.9 }}
-      >
+     <Canvas
+       shadows={false}
+       camera={{ position:[0, 16, 20], fov:60 }}
+       gl={{
+         antialias: false,
+         powerPreference: "high-performance",
+         toneMapping: THREE.ACESFilmicToneMapping,
+         toneMappingExposure: 1.2
+       }}
+       dpr={[1, 1.5]}
+     >
         {/* Fog */}
         <fog attach="fog" args={[cfg.fogColor, 40, 180]} />
 
@@ -492,17 +565,16 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
         <ambientLight color={cfg.ambientColor} intensity={cfg.ambientIntensity} />
         <directionalLight
           color={cfg.sunColor}
-          intensity={2}
+          intensity={2.5}
           position={[50, 80, 30]}
-          castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-          shadow-camera-far={300}
-          shadow-camera-left={-100}
-          shadow-camera-right={100}
-          shadow-camera-top={100}
-          shadow-camera-bottom={-100}
         />
+        {/* Sun glow */}
+        <pointLight color="#ffffaa" intensity={4} distance={300} position={[80, 120, 60]} />
+        {/* Rim light */}
+        <pointLight color="#004422" intensity={2} distance={150} position={[-60, 30, -60]} />
+        {/* Ground bounce */}
+        <pointLight color="#00aa44" intensity={1.5} distance={80} position={[0, 2, 0]} />
+
         <pointLight color={cfg.pointColor} intensity={3} distance={80} position={[0, 20, 0]} />
 
         {/* Sky */}
