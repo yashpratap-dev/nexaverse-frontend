@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Sparkles } from '@react-three/drei'
+import { Sparkles, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import SkySystem from './world/SkySystem'
 import WeatherSystem from './world/WeatherSystem'
@@ -182,73 +182,132 @@ function OceanDecorations() {
   )
 }
 
-function Avatar({ position, color, isMe, avatarType }) {
-  const groupRef = useRef()
+// ── AVATAR ─────────────────────────────────────────────────
+function Avatar({ position, color, isMe, avatarType, avatarRef }) {
+  const localRef = useRef()
+  const groupRef = avatarRef || localRef
   const ringRef = useRef()
   const typeColors = { WARRIOR:'#ff4444', MAGE:'#aa44ff', RANGER:'#44ffaa', ROGUE:'#ffaa00' }
   const col = isMe ? color : (typeColors[avatarType] || '#00ffc8')
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime()
-    if (groupRef.current && isMe) groupRef.current.position.y = Math.sin(t*1.5)*0.06
-    if (ringRef.current) { ringRef.current.rotation.y += 0.02; ringRef.current.material.opacity = 0.4+Math.sin(t*2)*0.3 }
+    if (ringRef.current) {
+      ringRef.current.rotation.y += 0.02
+      ringRef.current.material.opacity = 0.4+Math.sin(t*2)*0.3
+    }
   })
 
   return (
     <group ref={groupRef} position={position}>
-      <mesh position={[0,0.01,0]} rotation={[-Math.PI/2,0,0]}><circleGeometry args={[0.6,16]}/><meshBasicMaterial color="#000000" transparent opacity={0.3}/></mesh>
+      {/* Shadow */}
+      <mesh position={[0,0.01,0]} rotation={[-Math.PI/2,0,0]}>
+        <circleGeometry args={[0.6,16]}/><meshBasicMaterial color="#000000" transparent opacity={0.3}/>
+      </mesh>
+      {/* Legs */}
       <mesh position={[-0.2,0.5,0]}><cylinderGeometry args={[0.15,0.18,1,8]}/><meshStandardMaterial color={col} metalness={0.6} roughness={0.3}/></mesh>
       <mesh position={[0.2,0.5,0]}><cylinderGeometry args={[0.15,0.18,1,8]}/><meshStandardMaterial color={col} metalness={0.6} roughness={0.3}/></mesh>
-      <mesh position={[0,1.4,0]}><boxGeometry args={[0.7,0.9,0.45]}/><meshStandardMaterial color={col} metalness={0.7} roughness={0.2} emissive={col} emissiveIntensity={0.1}/></mesh>
+      {/* Body */}
+      <mesh position={[0,1.4,0]}><boxGeometry args={[0.7,0.9,0.45]}/><meshStandardMaterial color={col} metalness={0.7} roughness={0.2} emissive={col} emissiveIntensity={0.15}/></mesh>
+      {/* Arms */}
       <mesh position={[-0.5,1.4,0]}><cylinderGeometry args={[0.12,0.14,0.8,8]}/><meshStandardMaterial color={col} metalness={0.6} roughness={0.3}/></mesh>
       <mesh position={[0.5,1.4,0]}><cylinderGeometry args={[0.12,0.14,0.8,8]}/><meshStandardMaterial color={col} metalness={0.6} roughness={0.3}/></mesh>
+      {/* Head */}
       <mesh position={[0,2.2,0]}><boxGeometry args={[0.55,0.55,0.5]}/><meshStandardMaterial color="#ffccaa" roughness={0.7}/></mesh>
+      {/* Eyes */}
       <mesh position={[-0.14,2.25,0.26]}><sphereGeometry args={[0.07,8,8]}/><meshStandardMaterial color="#000000" emissive={col} emissiveIntensity={0.8}/></mesh>
       <mesh position={[0.14,2.25,0.26]}><sphereGeometry args={[0.07,8,8]}/><meshStandardMaterial color="#000000" emissive={col} emissiveIntensity={0.8}/></mesh>
+      {/* Hair */}
       <mesh position={[0,2.55,0]}><boxGeometry args={[0.58,0.2,0.52]}/><meshStandardMaterial color="#1a0a00" roughness={0.9}/></mesh>
-      <mesh ref={ringRef} position={[0,0.05,0]} rotation={[-Math.PI/2,0,0]}><torusGeometry args={[0.7,0.05,8,32]}/><meshStandardMaterial color={col} emissive={col} emissiveIntensity={1} transparent opacity={0.7}/></mesh>
+      {/* Glow ring */}
+      <mesh ref={ringRef} position={[0,0.05,0]} rotation={[-Math.PI/2,0,0]}>
+        <torusGeometry args={[0.7,0.05,8,32]}/><meshStandardMaterial color={col} emissive={col} emissiveIntensity={1} transparent opacity={0.7}/>
+      </mesh>
       <pointLight color={col} intensity={isMe?2:1} distance={8}/>
-      {isMe && <mesh position={[0,3,0]}><sphereGeometry args={[0.1,8,8]}/><meshStandardMaterial color={col} emissive={col} emissiveIntensity={1}/><pointLight color={col} intensity={1} distance={4}/></mesh>}
+      {isMe && (
+        <mesh position={[0,3,0]}>
+          <sphereGeometry args={[0.1,8,8]}/><meshStandardMaterial color={col} emissive={col} emissiveIntensity={1}/>
+          <pointLight color={col} intensity={1} distance={4}/>
+        </mesh>
+      )}
     </group>
   )
 }
 
-function CameraController({ targetRef }) {
-  const { camera } = useThree()
-  useFrame(() => {
-    if (!targetRef.current) return
-    const t = targetRef.current
-    camera.position.x += (t.x - camera.position.x) * 0.08
-    camera.position.z += (t.z + 20 - camera.position.z) * 0.08
-    camera.position.y += (16 - camera.position.y) * 0.05
-    camera.lookAt(t.x, t.y+1, t.z)
-  })
-  return null
-}
-
-function MovementController({ keys, posRef, onMove, onStep }) {
+// ── MOVEMENT + ROTATION CONTROLLER ────────────────────────
+function MovementController({ keys, posRef, onMove, onStep, avatarRef }) {
   const stepTimer = useRef(0)
+  const targetRotation = useRef(0)
+
   useFrame(() => {
     const SPEED=0.12, BOUND=90
-    let moved=false
-    if (keys.current['w']||keys.current['arrowup'])    { posRef.current.z-=SPEED; moved=true }
-    if (keys.current['s']||keys.current['arrowdown'])  { posRef.current.z+=SPEED; moved=true }
-    if (keys.current['a']||keys.current['arrowleft'])  { posRef.current.x-=SPEED; moved=true }
-    if (keys.current['d']||keys.current['arrowright']) { posRef.current.x+=SPEED; moved=true }
-    posRef.current.x = Math.max(-BOUND, Math.min(BOUND, posRef.current.x))
-    posRef.current.z = Math.max(-BOUND, Math.min(BOUND, posRef.current.z))
+    let dx=0, dz=0
+
+    if (keys.current['w']||keys.current['arrowup'])    dz=-SPEED
+    if (keys.current['s']||keys.current['arrowdown'])  dz=+SPEED
+    if (keys.current['a']||keys.current['arrowleft'])  dx=-SPEED
+    if (keys.current['d']||keys.current['arrowright']) dx=+SPEED
+
+    const moved = dx !== 0 || dz !== 0
+
     if (moved) {
+      posRef.current.x = Math.max(-BOUND, Math.min(BOUND, posRef.current.x + dx))
+      posRef.current.z = Math.max(-BOUND, Math.min(BOUND, posRef.current.z + dz))
+      targetRotation.current = Math.atan2(dx, dz)
       onMove && onMove(posRef.current.x, posRef.current.z)
       stepTimer.current += 0.12
       if (stepTimer.current > 0.5) { onStep && onStep(); stepTimer.current=0 }
+    }
+
+    // Smooth rotation
+    if (avatarRef?.current) {
+      const cur = avatarRef.current.rotation.y
+      const diff = targetRotation.current - cur
+      const wrapped = ((diff + Math.PI) % (Math.PI*2)) - Math.PI
+      avatarRef.current.rotation.y += wrapped * 0.12
     }
   })
   return null
 }
 
+// ── CAMERA FOLLOW CONTROLLER ──────────────────────────────
+function CameraFollower({ posRef }) {
+  const { camera } = useThree()
+  const orbitRef = useRef()
+
+  useFrame(() => {
+    if (!posRef.current) return
+    const tx = posRef.current.x
+    const tz = posRef.current.z
+    // Softly move orbit target to follow player
+    if (orbitRef.current) {
+      orbitRef.current.target.x += (tx - orbitRef.current.target.x) * 0.08
+      orbitRef.current.target.z += (tz - orbitRef.current.target.z) * 0.08
+      orbitRef.current.target.y = 1
+      orbitRef.current.update()
+    }
+  })
+
+  return (
+    <OrbitControls
+      ref={orbitRef}
+      enablePan={false}
+      enableZoom={true}
+      minDistance={6}
+      maxDistance={35}
+      minPolarAngle={Math.PI / 8}
+      maxPolarAngle={Math.PI / 2.2}
+      rotateSpeed={0.6}
+      zoomSpeed={0.8}
+    />
+  )
+}
+
+// ── MAIN COMPONENT ─────────────────────────────────────────
 export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) {
   const keys = useRef({})
   const myPos = useRef({ x:0, y:0, z:0 })
+  const avatarRef = useRef()
   const [timeOfDay, setTimeOfDay] = useState(0.3)
   const [myPosition, setMyPosition] = useState([0,0,0])
   const [otherPlayers, setOtherPlayers] = useState([])
@@ -259,15 +318,25 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
     const onKeyUp   = e => { keys.current[e.key.toLowerCase()]=false }
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
-    return () => { window.removeEventListener('keydown',onKeyDown); window.removeEventListener('keyup',onKeyUp) }
+    return () => {
+      window.removeEventListener('keydown',onKeyDown)
+      window.removeEventListener('keyup',onKeyUp)
+    }
   }, [])
 
   useEffect(() => {
     setOtherPlayers(players.filter(p => p.avatarId !== myAvatarId))
   }, [players, myAvatarId])
 
-  const handleMove = useCallback((x,z) => { setMyPosition([x,0,z]); onMove&&onMove(x,z) }, [onMove])
-  const handleStep = useCallback(() => { playFootstep(worldType==='DESERT'?'sand':worldType==='OCEAN'?'water':'grass') }, [worldType])
+  const handleMove = useCallback((x,z) => {
+    setMyPosition([x,0,z])
+    onMove && onMove(x,z)
+  }, [onMove])
+
+  const handleStep = useCallback(() => {
+    playFootstep(worldType==='DESERT'?'sand':worldType==='OCEAN'?'water':'grass')
+  }, [worldType])
+
   const typeColors = { WARRIOR:'#ff4444', MAGE:'#aa44ff', RANGER:'#44ffaa', ROGUE:'#ffaa00' }
 
   return (
@@ -275,11 +344,11 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
       <AmbientSound worldType={worldType} active={true} />
       <Canvas
         shadows={false}
-        camera={{ position:[0,16,20], fov:60 }}
+        camera={{ position:[0, 12, 18], fov:70 }}
         gl={{ antialias:false, powerPreference:"high-performance", toneMapping:THREE.ACESFilmicToneMapping, toneMappingExposure:1.2 }}
         dpr={[1,1.5]}
       >
-        <fog attach="fog" args={[cfg.fogColor, 40, 180]} />
+        <fog attach="fog" args={[cfg.fogColor, 60, 250]} />
         <ambientLight color={cfg.ambientColor} intensity={cfg.ambientIntensity} />
         <directionalLight color={cfg.sunColor} intensity={2.5} position={[50,80,30]} />
         <pointLight color="#ffffaa" intensity={4} distance={300} position={[80,120,60]} />
@@ -299,13 +368,13 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
         {worldType==='DESERT'  && <DesertDecorations />}
         {worldType==='OCEAN'   && <OceanDecorations />}
 
-        <Avatar position={myPosition} color="#00ffc8" isMe={true} avatarType="WARRIOR" />
+        <Avatar position={myPosition} color="#00ffc8" isMe={true} avatarType="WARRIOR" avatarRef={avatarRef} />
         {otherPlayers.map(p => (
           <Avatar key={p.avatarId} position={[p.positionX||0,0,p.positionY||0]} color={typeColors[p.avatarType]||'#0080ff'} isMe={false} avatarType={p.avatarType} />
         ))}
 
-        <CameraController targetRef={myPos} />
-        <MovementController keys={keys} posRef={myPos} onMove={handleMove} onStep={handleStep} />
+        <CameraFollower posRef={myPos} />
+        <MovementController keys={keys} posRef={myPos} onMove={handleMove} onStep={handleStep} avatarRef={avatarRef} />
       </Canvas>
     </div>
   )
