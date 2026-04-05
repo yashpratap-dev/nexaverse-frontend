@@ -9,6 +9,7 @@ import AvatarsPage from './pages/AvatarsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import AiChatPage from './pages/AiChatPage'
 import MonitorPage from './pages/MonitorPage'
+import LeaderboardPage from './pages/LeaderboardPage'
 
 
 function App() {
@@ -38,6 +39,9 @@ function App() {
         <Route path="/monitor" element={
           <ProtectedRoute><MonitorPage /></ProtectedRoute>
         } />
+    <Route path="/leaderboard" element={
+      <ProtectedRoute><LeaderboardPage /></ProtectedRoute>
+    } />
       </Routes>
     </BrowserRouter>
   )

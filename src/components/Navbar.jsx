@@ -37,11 +37,12 @@ export default function Navbar() {
       {/* Nav Links */}
       <div style={{ display: 'flex', gap: 28 }}>
         {[
-          { label: 'Worlds',    path: '/worlds' },
-          { label: 'Avatars',   path: '/avatars' },
-          { label: 'AI Chat',   path: '/ai-chat' },
-          { label: 'Dashboard', path: '/dashboard' },
-          { label: 'Monitor',   path: '/monitor' },
+          { label: 'Worlds',      path: '/worlds' },
+          { label: 'Avatars',     path: '/avatars' },
+          { label: 'AI Chat',     path: '/ai-chat' },
+          { label: 'Dashboard',   path: '/dashboard' },
+          { label: 'Monitor',     path: '/monitor' },
+          { label: 'Leaderboard', path: '/leaderboard' },  // ← YAHAN ADD KIYA
         ].map(link => (
           <Link
             key={link.label}
