@@ -41,6 +41,7 @@ export default function Navbar() {
           { label: 'Avatars',   path: '/avatars' },
           { label: 'AI Chat',   path: '/ai-chat' },
           { label: 'Dashboard', path: '/dashboard' },
+          { label: 'Monitor',   path: '/monitor' },
         ].map(link => (
           <Link
             key={link.label}

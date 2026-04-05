@@ -8,6 +8,7 @@ import WorldRoomPage from './pages/WorldRoomPage'
 import AvatarsPage from './pages/AvatarsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import AiChatPage from './pages/AiChatPage'
+import MonitorPage from './pages/MonitorPage'
 
 
 function App() {
@@ -34,6 +35,9 @@ function App() {
           <ProtectedRoute><AvatarsPage /></ProtectedRoute>
         } />
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/monitor" element={
+          <ProtectedRoute><MonitorPage /></ProtectedRoute>
+        } />
       </Routes>
     </BrowserRouter>
   )
