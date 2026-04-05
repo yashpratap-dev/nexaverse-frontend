@@ -9,6 +9,8 @@ export default function WorldsPage() {
   const [worlds, setWorlds] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searching, setSearching] = useState(false)
 
   useEffect(() => {
     async function fetchWorlds() {
@@ -23,6 +25,26 @@ export default function WorldsPage() {
     }
     fetchWorlds()
   }, [])
+
+  async function handleSearch(query) {
+    setSearchQuery(query)
+    if (!query.trim()) {
+      try {
+        const res = await api.get('/api/worlds')
+        setWorlds(res.data.data || [])
+      } catch (err) {}
+      return
+    }
+    setSearching(true)
+    try {
+      const res = await api.get(`/api/search/worlds?query=${encodeURIComponent(query)}`)
+      setWorlds(res.data.data || [])
+    } catch (err) {
+      console.error('Search failed:', err)
+    } finally {
+      setSearching(false)
+    }
+  }
 
   const typeColors = {
     FOREST: '#40ff80', CITY: '#0080ff', DESERT: '#ffaa00',
@@ -60,7 +82,48 @@ export default function WorldsPage() {
         <div style={{ marginBottom: 40 }}>
           <div style={{ fontFamily: "'Share Tech Mono',monospace", fontSize: 11, letterSpacing: 4, color: '#0080ff', textTransform: 'uppercase', marginBottom: 10 }}>// World Registry</div>
           <h1 style={{ fontFamily: "'Orbitron',monospace", fontWeight: 900, fontSize: 'clamp(22px,4vw,38px)', color: '#e0f0ff', letterSpacing: 4, marginBottom: 10 }}>ACTIVE WORLDS</h1>
-          <div style={{ width: 56, height: 2, background: '#00ffc8' }} />
+          <div style={{ width: 56, height: 2, background: '#00ffc8', marginBottom: 32 }} />
+
+          {/* Search Bar */}
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              placeholder="Search worlds... (try: dark, peaceful, scary, nature, magic)"
+              value={searchQuery}
+              onChange={e => handleSearch(e.target.value)}
+              style={{
+                width: '100%', padding: '14px 20px 14px 48px',
+                background: 'rgba(6,12,28,0.95)',
+                border: '1px solid rgba(0,255,200,0.2)',
+                color: '#e0f0ff', fontFamily: "'Share Tech Mono',monospace",
+                fontSize: 13, outline: 'none', letterSpacing: 1,
+                boxSizing: 'border-box', transition: 'border-color 0.3s'
+              }}
+              onFocus={e => e.target.style.borderColor = 'rgba(0,255,200,0.6)'}
+              onBlur={e => e.target.style.borderColor = 'rgba(0,255,200,0.2)'}
+            />
+            <div style={{
+              position: 'absolute', left: 16, top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'rgba(0,255,200,0.5)', fontSize: 18
+            }}>⌕</div>
+            {searching && (
+              <div style={{
+                position: 'absolute', right: 16, top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'rgba(0,255,200,0.5)', fontSize: 11,
+                fontFamily: "'Share Tech Mono',monospace", letterSpacing: 2
+              }}>SEARCHING...</div>
+            )}
+            {!searching && searchQuery && (
+              <div style={{
+                position: 'absolute', right: 16, top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'rgba(0,255,200,0.5)', fontSize: 11,
+                fontFamily: "'Share Tech Mono',monospace", letterSpacing: 2
+              }}>{worlds.length} RESULTS</div>
+            )}
+          </div>
         </div>
 
         {loading && (
@@ -79,7 +142,7 @@ export default function WorldsPage() {
           <>
             {worlds.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 0', fontFamily: "'Share Tech Mono',monospace", fontSize: 13, color: 'rgba(150,200,255,0.4)', letterSpacing: 2 }}>
-                No worlds found. Create one from your backend!
+                {searchQuery ? `No worlds found for "${searchQuery}"` : 'No worlds found. Create one from your backend!'}
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 20 }}>
