@@ -9,7 +9,7 @@ import AmbientSound from './world/AmbientSound'
 import { playFootstep } from '../audio/worldSounds'
 
 const WORLD_CONFIGS = {
-  FOREST:  { fogColor:'#0a1a0a', fogNear:80, fogFar:300, ambientColor:'#223322', ambientIntensity:2, sunColor:'#aaffaa', pointColor:'#00ff88', gridColor:'#00aa4422', gridColor2:'#00220822', weather:'clear',
+  FOREST:  { fogColor:'#0a1a0a', fogNear:80, fogFar:300, ambientColor:'#332211', ambientIntensity:2, sunColor:'#aaffaa', pointColor:'#00ff88', gridColor:'#00aa4422', gridColor2:'#00220822', weather:'clear',
     companion: { name:'MIMIR', color:'#0088ff', greetings:['The forest whispers your name, warrior.','I sense great power within these woods.','Stay close. The ancient trees have eyes.'] }
   },
   CITY:    { fogColor:'#000510', fogNear:60, fogFar:250, ambientColor:'#111133', ambientIntensity:1.5, sunColor:'#4488ff', pointColor:'#0066ff', gridColor:'#0066ff22', gridColor2:'#000a1a22', weather:'clear',
@@ -48,7 +48,13 @@ function Terrain({ worldType }) {
     g.computeVertexNormals()
     return g
   }, [worldType])
-  const colors = { FOREST:'#1a4a1a', CITY:'#0a0a1a', DESERT:'#6b5020', OCEAN:'#001a33', DUNGEON:'#0a000f' }
+ const colors = {
+   FOREST:'#5c4a2a',   // mud brown
+   CITY:'#0a0a1a',
+   DESERT:'#8b6914',
+   OCEAN:'#001a33',
+   DUNGEON:'#0a000f'
+ }
   return (
     <mesh geometry={geo} rotation={[-Math.PI/2, 0, 0]} receiveShadow>
       <meshStandardMaterial color={colors[worldType]||'#1a1a2e'} roughness={0.95} metalness={0.05} />
