@@ -9,24 +9,23 @@ import AmbientSound from './world/AmbientSound'
 import { playFootstep } from '../audio/worldSounds'
 
 const WORLD_CONFIGS = {
-  FOREST:  { fogColor:'#0a1a0a', fogNear:80, fogFar:300, ambientColor:'#223322', ambientIntensity:2, sunColor:'#aaffaa', pointColor:'#00ff88', gridColor:'#00aa4422', gridColor2:'#00220822', floorColor:'#1a3a1a', weather:'clear',
+  FOREST:  { fogColor:'#0a1a0a', fogNear:80, fogFar:300, ambientColor:'#223322', ambientIntensity:2, sunColor:'#aaffaa', pointColor:'#00ff88', gridColor:'#00aa4422', gridColor2:'#00220822', weather:'clear',
     companion: { name:'MIMIR', color:'#0088ff', greetings:['The forest whispers your name, warrior.','I sense great power within these woods.','Stay close. The ancient trees have eyes.'] }
   },
-  CITY:    { fogColor:'#000510', fogNear:60, fogFar:250, ambientColor:'#111133', ambientIntensity:1.5, sunColor:'#4488ff', pointColor:'#0066ff', gridColor:'#0066ff22', gridColor2:'#000a1a22', floorColor:'#0a0a1a', weather:'rain',
+  CITY:    { fogColor:'#000510', fogNear:60, fogFar:250, ambientColor:'#111133', ambientIntensity:1.5, sunColor:'#4488ff', pointColor:'#0066ff', gridColor:'#0066ff22', gridColor2:'#000a1a22', weather:'clear',
     companion: { name:'MIMIR', color:'#0088ff', greetings:['The city never sleeps, and neither do I.','Every light here hides a thousand secrets.','I have seen empires rise from rubble like this.'] }
   },
-  DESERT:  { fogColor:'#2a1800', fogNear:100, fogFar:350, ambientColor:'#332200', ambientIntensity:2.5, sunColor:'#ffdd44', pointColor:'#ffaa00', gridColor:'#cc880022', gridColor2:'#1a0f0022', floorColor:'#3a2a0a', weather:'clear',
+  DESERT:  { fogColor:'#2a1800', fogNear:100, fogFar:350, ambientColor:'#332200', ambientIntensity:2.5, sunColor:'#ffdd44', pointColor:'#ffaa00', gridColor:'#cc880022', gridColor2:'#1a0f0022', weather:'clear',
     companion: { name:'GUANYIN', color:'#ff3cac', greetings:['The desert teaches patience, child.','Even sand was once solid rock.','Listen to the wind — it carries wisdom.'] }
   },
-  OCEAN:   { fogColor:'#000a20', fogNear:70, fogFar:280, ambientColor:'#001133', ambientIntensity:1.8, sunColor:'#44aaff', pointColor:'#00ccff', gridColor:'#0088cc22', gridColor2:'#000a1522', floorColor:'#001a2e', weather:'clear',
+  OCEAN:   { fogColor:'#000a20', fogNear:70, fogFar:280, ambientColor:'#001133', ambientIntensity:1.8, sunColor:'#44aaff', pointColor:'#00ccff', gridColor:'#0088cc22', gridColor2:'#000a1522', weather:'clear',
     companion: { name:'GUANYIN', color:'#ff3cac', greetings:['The ocean holds memories of all time.','Breathe deeply. The sea air cleanses the soul.','Every wave returns what the tide takes away.'] }
   },
-  DUNGEON: { fogColor:'#080008', fogNear:30, fogFar:150, ambientColor:'#220022', ambientIntensity:0.8, sunColor:'#ff3cac', pointColor:'#ff00aa', gridColor:'#aa006622', gridColor2:'#0a000a22', floorColor:'#0a000a', weather:'clear',
+  DUNGEON: { fogColor:'#080008', fogNear:30, fogFar:150, ambientColor:'#220022', ambientIntensity:0.8, sunColor:'#ff3cac', pointColor:'#ff00aa', gridColor:'#aa006622', gridColor2:'#0a000a22', weather:'clear',
     companion: { name:'MIMIR', color:'#0088ff', greetings:['Not all monsters lurk in darkness, boy.','I have been imprisoned in darker places than this.','Keep your torch burning. Keep your mind sharper.'] }
   },
 }
 
-// ── TERRAIN ──────────────────────────────────────────────
 function Terrain({ worldType }) {
   const geo = useMemo(() => {
     const g = new THREE.PlaneGeometry(400, 400, 120, 120)
@@ -49,7 +48,6 @@ function Terrain({ worldType }) {
     g.computeVertexNormals()
     return g
   }, [worldType])
-
   const colors = { FOREST:'#1a4a1a', CITY:'#0a0a1a', DESERT:'#6b5020', OCEAN:'#001a33', DUNGEON:'#0a000f' }
   return (
     <mesh geometry={geo} rotation={[-Math.PI/2, 0, 0]} receiveShadow>
@@ -58,7 +56,6 @@ function Terrain({ worldType }) {
   )
 }
 
-// ── FOREST DECORATIONS ────────────────────────────────────
 function ForestDecorations() {
   const trees = useMemo(() => {
     const items = []
@@ -162,7 +159,6 @@ function OceanDecorations() {
   )
 }
 
-// ── AI COMPANION ──────────────────────────────────────────
 function AICompanion({ playerPos, worldType, onSpeak }) {
   const groupRef = useRef()
   const targetPos = useRef({ x:4, z:4 })
@@ -205,7 +201,6 @@ function AICompanion({ playerPos, worldType, onSpeak }) {
   )
 }
 
-// ── AVATAR ────────────────────────────────────────────────
 function Avatar({ position, color, isMe, avatarType, avatarRef }) {
   const localRef = useRef()
   const groupRef = avatarRef || localRef
@@ -240,7 +235,6 @@ function Avatar({ position, color, isMe, avatarType, avatarRef }) {
   )
 }
 
-// ── MOVEMENT CONTROLLER ───────────────────────────────────
 function MovementController({ keys, posRef, onMove, onStep, avatarRef }) {
   const stepTimer = useRef(0)
   const targetRotation = useRef(0)
@@ -274,7 +268,6 @@ function MovementController({ keys, posRef, onMove, onStep, avatarRef }) {
   return null
 }
 
-// ── CAMERA FOLLOWER ───────────────────────────────────────
 function CameraFollower({ posRef }) {
   const orbitRef = useRef()
   useFrame(() => {
@@ -298,9 +291,14 @@ function VoiceButton({ onResult, color }) {
   const [listening, setListening] = useState(false)
   const recognRef = useRef(null)
 
-  function startListening() {
+  function toggleListening() {
+    if (listening) {
+      recognRef.current?.stop()
+      setListening(false)
+      return
+    }
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      alert('Browser speech recognition supported nahi hai! Chrome use karo.')
+      alert('Chrome browser use karo!')
       return
     }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -308,6 +306,7 @@ function VoiceButton({ onResult, color }) {
     recog.lang = 'en-US'
     recog.interimResults = false
     recog.maxAlternatives = 1
+    recog.continuous = false
     recog.onstart = () => setListening(true)
     recog.onend = () => setListening(false)
     recog.onresult = (e) => { onResult && onResult(e.results[0][0].transcript) }
@@ -316,29 +315,38 @@ function VoiceButton({ onResult, color }) {
     recog.start()
   }
 
-  function stopListening() {
-    recognRef.current?.stop()
-    setListening(false)
-  }
-
   return (
-    <button
-      onMouseDown={startListening} onMouseUp={stopListening}
-      onTouchStart={startListening} onTouchEnd={stopListening}
-      style={{
-        position:'absolute', bottom:20, left:'50%', transform:'translateX(-50%)',
-        width:60, height:60, borderRadius:'50%',
-        background: listening ? `${color}33` : 'rgba(0,0,0,0.85)',
-        border:`2px solid ${listening ? color : 'rgba(255,255,255,0.2)'}`,
-        cursor:'pointer', zIndex:200,
+    <div style={{
+      position:'absolute', bottom:20, left:'50%', transform:'translateX(-50%)',
+      display:'flex', flexDirection:'column', alignItems:'center', gap:8, zIndex:200
+    }}>
+      {listening && (
+        <div style={{
+          fontFamily:"'Share Tech Mono',monospace", fontSize:11,
+          color:color, letterSpacing:2
+        }}>
+          🎙️ LISTENING... CLICK TO STOP
+        </div>
+      )}
+      <button onClick={toggleListening} style={{
+        width:64, height:64, borderRadius:'50%',
+        background: listening ? `${color}22` : 'rgba(0,0,0,0.85)',
+        border:`2px solid ${listening ? color : 'rgba(255,255,255,0.25)'}`,
+        cursor:'pointer',
         display:'flex', alignItems:'center', justifyContent:'center',
-        fontSize:24,
-        boxShadow: listening ? `0 0 25px ${color}` : 'none',
+        fontSize:26,
+        boxShadow: listening ? `0 0 30px ${color}` : 'none',
         transition:'all 0.3s'
-      }}
-    >
-      {listening ? '🎙️' : '🎤'}
-    </button>
+      }}>
+        {listening ? '🔴' : '🎤'}
+      </button>
+      <div style={{
+        fontFamily:"'Share Tech Mono',monospace", fontSize:9,
+        color:'rgba(255,255,255,0.3)', letterSpacing:2
+      }}>
+        {listening ? 'RECORDING' : `TALK TO ${color === '#0088ff' ? 'MIMIR' : 'GUANYIN'}`}
+      </div>
+    </div>
   )
 }
 
@@ -347,17 +355,17 @@ function CompanionDialogue({ message, name, color }) {
   if (!message) return null
   return (
     <div style={{
-      position:'absolute', bottom:100, left:'50%', transform:'translateX(-50%)',
+      position:'absolute', bottom:110, left:'50%', transform:'translateX(-50%)',
       background:'rgba(0,0,0,0.88)', border:`1px solid ${color}66`,
       padding:'14px 28px', maxWidth:520, zIndex:200,
       fontFamily:"'Share Tech Mono',monospace",
       boxShadow:`0 0 30px ${color}22`,
-      animation:'fadeIn 0.3s ease', whiteSpace:'nowrap'
+      animation:'fadeIn 0.3s ease'
     }}>
       <div style={{ fontSize:10, color:color, letterSpacing:3, marginBottom:6, textTransform:'uppercase' }}>
         ⬡ {name} · AI COMPANION
       </div>
-      <div style={{ fontSize:13, color:'rgba(200,230,255,0.9)', lineHeight:1.7, letterSpacing:0.5, whiteSpace:'normal' }}>
+      <div style={{ fontSize:13, color:'rgba(200,230,255,0.9)', lineHeight:1.7, letterSpacing:0.5 }}>
         "{message}"
       </div>
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`}</style>
@@ -483,82 +491,7 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
       </Canvas>
 
       <CompanionDialogue message={companionMsg} name={companionName} color={cfg.companion.color} />
-      function VoiceButton({ onResult, color }) {
-        const [listening, setListening] = useState(false)
-        const recognRef = useRef(null)
-
-        function toggleListening() {
-          if (listening) {
-            recognRef.current?.stop()
-            setListening(false)
-            return
-          }
-
-          if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-            alert('Chrome browser use karo!')
-            return
-          }
-
-          const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-          const recog = new SR()
-          recog.lang = 'en-US'
-          recog.interimResults = false
-          recog.maxAlternatives = 1
-          recog.continuous = false
-
-          recog.onstart = () => setListening(true)
-          recog.onend = () => setListening(false)
-          recog.onresult = (e) => {
-            const transcript = e.results[0][0].transcript
-            onResult && onResult(transcript)
-          }
-          recog.onerror = (e) => {
-            console.error('Speech error:', e.error)
-            setListening(false)
-          }
-
-          recognRef.current = recog
-          recog.start()
-        }
-
-        return (
-          <div style={{
-            position:'absolute', bottom:20, left:'50%', transform:'translateX(-50%)',
-            display:'flex', flexDirection:'column', alignItems:'center', gap:8, zIndex:200
-          }}>
-            {listening && (
-              <div style={{
-                fontFamily:"'Share Tech Mono',monospace", fontSize:11,
-                color:color, letterSpacing:2, animation:'pulse 1s infinite'
-              }}>
-                🎙️ LISTENING... CLICK TO STOP
-                <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
-              </div>
-            )}
-            <button
-              onClick={toggleListening}
-              style={{
-                width:64, height:64, borderRadius:'50%',
-                background: listening ? `${color}22` : 'rgba(0,0,0,0.85)',
-                border:`2px solid ${listening ? color : 'rgba(255,255,255,0.25)'}`,
-                cursor:'pointer',
-                display:'flex', alignItems:'center', justifyContent:'center',
-                fontSize:26,
-                boxShadow: listening ? `0 0 30px ${color}, 0 0 60px ${color}44` : 'none',
-                transition:'all 0.3s'
-              }}
-            >
-              {listening ? '🔴' : '🎤'}
-            </button>
-            <div style={{
-              fontFamily:"'Share Tech Mono',monospace", fontSize:9,
-              color:'rgba(255,255,255,0.3)', letterSpacing:2
-            }}>
-              {listening ? 'RECORDING' : 'TALK TO ' + (color === '#0088ff' ? 'MIMIR' : 'GUANYIN')}
-            </div>
-          </div>
-        )
-      }
+      <VoiceButton onResult={handleVoiceCommand} color={cfg.companion.color} />
     </div>
   )
 }
