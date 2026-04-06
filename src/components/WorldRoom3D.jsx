@@ -483,7 +483,82 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
       </Canvas>
 
       <CompanionDialogue message={companionMsg} name={companionName} color={cfg.companion.color} />
-      <VoiceButton onResult={handleVoiceCommand} color={cfg.companion.color} />
+      function VoiceButton({ onResult, color }) {
+        const [listening, setListening] = useState(false)
+        const recognRef = useRef(null)
+
+        function toggleListening() {
+          if (listening) {
+            recognRef.current?.stop()
+            setListening(false)
+            return
+          }
+
+          if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+            alert('Chrome browser use karo!')
+            return
+          }
+
+          const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+          const recog = new SR()
+          recog.lang = 'en-US'
+          recog.interimResults = false
+          recog.maxAlternatives = 1
+          recog.continuous = false
+
+          recog.onstart = () => setListening(true)
+          recog.onend = () => setListening(false)
+          recog.onresult = (e) => {
+            const transcript = e.results[0][0].transcript
+            onResult && onResult(transcript)
+          }
+          recog.onerror = (e) => {
+            console.error('Speech error:', e.error)
+            setListening(false)
+          }
+
+          recognRef.current = recog
+          recog.start()
+        }
+
+        return (
+          <div style={{
+            position:'absolute', bottom:20, left:'50%', transform:'translateX(-50%)',
+            display:'flex', flexDirection:'column', alignItems:'center', gap:8, zIndex:200
+          }}>
+            {listening && (
+              <div style={{
+                fontFamily:"'Share Tech Mono',monospace", fontSize:11,
+                color:color, letterSpacing:2, animation:'pulse 1s infinite'
+              }}>
+                🎙️ LISTENING... CLICK TO STOP
+                <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+              </div>
+            )}
+            <button
+              onClick={toggleListening}
+              style={{
+                width:64, height:64, borderRadius:'50%',
+                background: listening ? `${color}22` : 'rgba(0,0,0,0.85)',
+                border:`2px solid ${listening ? color : 'rgba(255,255,255,0.25)'}`,
+                cursor:'pointer',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                fontSize:26,
+                boxShadow: listening ? `0 0 30px ${color}, 0 0 60px ${color}44` : 'none',
+                transition:'all 0.3s'
+              }}
+            >
+              {listening ? '🔴' : '🎤'}
+            </button>
+            <div style={{
+              fontFamily:"'Share Tech Mono',monospace", fontSize:9,
+              color:'rgba(255,255,255,0.3)', letterSpacing:2
+            }}>
+              {listening ? 'RECORDING' : 'TALK TO ' + (color === '#0088ff' ? 'MIMIR' : 'GUANYIN')}
+            </div>
+          </div>
+        )
+      }
     </div>
   )
 }
