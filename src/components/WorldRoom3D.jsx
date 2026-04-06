@@ -26,7 +26,7 @@ const WORLD_CONFIGS = {
   },
 }
 
-// ── TERRAIN ────────────────────────────────────────────────
+// ── TERRAIN ──────────────────────────────────────────────
 function Terrain({ worldType }) {
   const geo = useMemo(() => {
     const g = new THREE.PlaneGeometry(400, 400, 120, 120)
@@ -51,7 +51,6 @@ function Terrain({ worldType }) {
   }, [worldType])
 
   const colors = { FOREST:'#1a4a1a', CITY:'#0a0a1a', DESERT:'#6b5020', OCEAN:'#001a33', DUNGEON:'#0a000f' }
-
   return (
     <mesh geometry={geo} rotation={[-Math.PI/2, 0, 0]} receiveShadow>
       <meshStandardMaterial color={colors[worldType]||'#1a1a2e'} roughness={0.95} metalness={0.05} />
@@ -59,7 +58,7 @@ function Terrain({ worldType }) {
   )
 }
 
-// ── FOREST DECORATIONS ─────────────────────────────────────
+// ── FOREST DECORATIONS ────────────────────────────────────
 function ForestDecorations() {
   const trees = useMemo(() => {
     const items = []
@@ -71,7 +70,6 @@ function ForestDecorations() {
     }
     return items
   }, [])
-
   return (
     <group>
       {trees.map((t, i) => (
@@ -82,14 +80,8 @@ function ForestDecorations() {
             <mesh position={[0,9,0]}><coneGeometry args={[2.2,3.5,8]}/><meshStandardMaterial color={`hsl(${t.hue*360},60%,24%)`} roughness={0.9} emissive={`hsl(${t.hue*360},45%,10%)`} emissiveIntensity={0.4}/></mesh>
             <mesh position={[0,11.5,0]}><coneGeometry args={[1.4,2.8,8]}/><meshStandardMaterial color={`hsl(${t.hue*360},65%,28%)`} roughness={0.9} emissive={`hsl(${t.hue*360},50%,12%)`} emissiveIntensity={0.5}/></mesh>
           </>)}
-          {t.variant === 1 && (
-            <mesh position={[0,6,0]}><sphereGeometry args={[3,9,7]}/><meshStandardMaterial color={`hsl(${t.hue*360},50%,22%)`} roughness={0.9} emissive={`hsl(${t.hue*360},35%,9%)`} emissiveIntensity={0.4}/></mesh>
-          )}
-          {t.variant === 2 && (<>
-            {[0,1,2,3].map(l=>(
-              <mesh key={l} position={[0,4.5+l*1.8,0]}><cylinderGeometry args={[3-l*0.5,3.3-l*0.5,1,9]}/><meshStandardMaterial color={`hsl(${t.hue*360},55%,${19+l*4}%)`} roughness={0.9} emissive={`hsl(${t.hue*360},40%,8%)`} emissiveIntensity={0.3}/></mesh>
-            ))}
-          </>)}
+          {t.variant === 1 && (<mesh position={[0,6,0]}><sphereGeometry args={[3,9,7]}/><meshStandardMaterial color={`hsl(${t.hue*360},50%,22%)`} roughness={0.9} emissive={`hsl(${t.hue*360},35%,9%)`} emissiveIntensity={0.4}/></mesh>)}
+          {t.variant === 2 && (<>{[0,1,2,3].map(l=>(<mesh key={l} position={[0,4.5+l*1.8,0]}><cylinderGeometry args={[3-l*0.5,3.3-l*0.5,1,9]}/><meshStandardMaterial color={`hsl(${t.hue*360},55%,${19+l*4}%)`} roughness={0.9} emissive={`hsl(${t.hue*360},40%,8%)`} emissiveIntensity={0.3}/></mesh>))}</>)}
           {t.variant === 3 && (<>
             <mesh position={[0,5.5,0]}><coneGeometry args={[3.5,5,6]}/><meshStandardMaterial color={`hsl(${t.hue*360},45%,18%)`} roughness={1} emissive={`hsl(${t.hue*360},30%,7%)`} emissiveIntensity={0.4}/></mesh>
             <mesh position={[0,9.5,0]}><coneGeometry args={[2.2,4,6]}/><meshStandardMaterial color={`hsl(${t.hue*360},50%,22%)`} roughness={1}/></mesh>
@@ -170,11 +162,11 @@ function OceanDecorations() {
   )
 }
 
-// ── AI COMPANION IN WORLD ──────────────────────────────────
+// ── AI COMPANION ──────────────────────────────────────────
 function AICompanion({ playerPos, worldType, onSpeak }) {
   const groupRef = useRef()
-  const targetPos = useRef({ x: 4, z: 4 })
-  const floatOffset = useRef(Math.random() * Math.PI * 2)
+  const targetPos = useRef({ x:4, z:4 })
+  const floatOffset = useRef(Math.random()*Math.PI*2)
   const speakTimer = useRef(0)
   const cfg = WORLD_CONFIGS[worldType] || WORLD_CONFIGS.FOREST
   const col = cfg.companion.color
@@ -182,64 +174,38 @@ function AICompanion({ playerPos, worldType, onSpeak }) {
   useFrame((state) => {
     const t = state.clock.getElapsedTime()
     if (!groupRef.current || !playerPos.current) return
-
-    // Follow player at offset distance
     const px = playerPos.current.x
     const pz = playerPos.current.z
-    const angle = t * 0.3 + floatOffset.current
-    const radius = 4
-    targetPos.current.x = px + Math.cos(angle) * radius
-    targetPos.current.z = pz + Math.sin(angle) * radius
-
-    // Smooth follow
-    groupRef.current.position.x += (targetPos.current.x - groupRef.current.position.x) * 0.04
-    groupRef.current.position.z += (targetPos.current.z - groupRef.current.position.z) * 0.04
-    groupRef.current.position.y = 3 + Math.sin(t * 1.2 + floatOffset.current) * 0.5
-
-    // Rotate to face player
+    const angle = t*0.3 + floatOffset.current
+    targetPos.current.x = px + Math.cos(angle)*4
+    targetPos.current.z = pz + Math.sin(angle)*4
+    groupRef.current.position.x += (targetPos.current.x - groupRef.current.position.x)*0.04
+    groupRef.current.position.z += (targetPos.current.z - groupRef.current.position.z)*0.04
+    groupRef.current.position.y = 3 + Math.sin(t*1.2 + floatOffset.current)*0.5
     const dx = px - groupRef.current.position.x
     const dz = pz - groupRef.current.position.z
     groupRef.current.rotation.y = Math.atan2(dx, dz)
-
-    // Speak occasionally
     speakTimer.current += 0.016
-    if (speakTimer.current > 25 + Math.random() * 15) {
+    if (speakTimer.current > 25 + Math.random()*15) {
       speakTimer.current = 0
-      const greetings = cfg.companion.greetings
-      onSpeak && onSpeak(greetings[Math.floor(Math.random() * greetings.length)], cfg.companion.name)
+      const g = cfg.companion.greetings
+      onSpeak && onSpeak(g[Math.floor(Math.random()*g.length)], cfg.companion.name)
     }
   })
 
   return (
-    <group ref={groupRef} position={[4, 3, 4]}>
-      {/* Companion body — orb shape */}
-      <mesh>
-        <sphereGeometry args={[0.6, 16, 16]} />
-        <meshStandardMaterial color={col} emissive={col} emissiveIntensity={0.6} transparent opacity={0.85} metalness={0.3} roughness={0.2} />
-      </mesh>
-      {/* Inner core */}
-      <mesh>
-        <sphereGeometry args={[0.35, 12, 12]} />
-        <meshStandardMaterial color="#ffffff" emissive={col} emissiveIntensity={1} transparent opacity={0.7} />
-      </mesh>
-      {/* Orbiting ring */}
-      <mesh rotation={[Math.PI/3, 0, 0]}>
-        <torusGeometry args={[1, 0.04, 8, 32]} />
-        <meshStandardMaterial color={col} emissive={col} emissiveIntensity={0.8} />
-      </mesh>
-      <mesh rotation={[-Math.PI/4, Math.PI/3, 0]}>
-        <torusGeometry args={[1.2, 0.03, 8, 32]} />
-        <meshStandardMaterial color={col} emissive={col} emissiveIntensity={0.6} transparent opacity={0.6} />
-      </mesh>
-      {/* Glow light */}
-      <pointLight color={col} intensity={3} distance={12} />
-      {/* Particles around companion */}
-      <Sparkles count={20} scale={[3,3,3]} size={1.5} speed={0.8} color={col} opacity={0.8} />
+    <group ref={groupRef} position={[4,3,4]}>
+      <mesh><sphereGeometry args={[0.6,16,16]}/><meshStandardMaterial color={col} emissive={col} emissiveIntensity={0.6} transparent opacity={0.85} metalness={0.3} roughness={0.2}/></mesh>
+      <mesh><sphereGeometry args={[0.35,12,12]}/><meshStandardMaterial color="#ffffff" emissive={col} emissiveIntensity={1} transparent opacity={0.7}/></mesh>
+      <mesh rotation={[Math.PI/3,0,0]}><torusGeometry args={[1,0.04,8,32]}/><meshStandardMaterial color={col} emissive={col} emissiveIntensity={0.8}/></mesh>
+      <mesh rotation={[-Math.PI/4,Math.PI/3,0]}><torusGeometry args={[1.2,0.03,8,32]}/><meshStandardMaterial color={col} emissive={col} emissiveIntensity={0.6} transparent opacity={0.6}/></mesh>
+      <pointLight color={col} intensity={3} distance={12}/>
+      <Sparkles count={20} scale={[3,3,3]} size={1.5} speed={0.8} color={col} opacity={0.8}/>
     </group>
   )
 }
 
-// ── AVATAR ─────────────────────────────────────────────────
+// ── AVATAR ────────────────────────────────────────────────
 function Avatar({ position, color, isMe, avatarType, avatarRef }) {
   const localRef = useRef()
   const groupRef = avatarRef || localRef
@@ -251,7 +217,7 @@ function Avatar({ position, color, isMe, avatarType, avatarRef }) {
     const t = state.clock.getElapsedTime()
     if (ringRef.current) {
       ringRef.current.rotation.y += 0.025
-      ringRef.current.material.opacity = 0.4 + Math.sin(t*2.5)*0.3
+      ringRef.current.material.opacity = 0.4+Math.sin(t*2.5)*0.3
     }
   })
 
@@ -274,45 +240,48 @@ function Avatar({ position, color, isMe, avatarType, avatarRef }) {
   )
 }
 
-// ── MOVEMENT CONTROLLER ────────────────────────────────────
+// ── MOVEMENT CONTROLLER ───────────────────────────────────
 function MovementController({ keys, posRef, onMove, onStep, avatarRef }) {
   const stepTimer = useRef(0)
   const targetRotation = useRef(0)
+  const { camera } = useThree()
 
   useFrame(() => {
     const SPEED=0.15, BOUND=180
     let dx=0, dz=0
-    if (keys.current['w']||keys.current['arrowup'])    dz=-SPEED
-    if (keys.current['s']||keys.current['arrowdown'])  dz=+SPEED
-    if (keys.current['a']||keys.current['arrowleft'])  dx=-SPEED
-    if (keys.current['d']||keys.current['arrowright']) dx=+SPEED
+    if (keys.current['w']||keys.current['arrowup'])    { dx+=-Math.sin(camera.rotation.y); dz+=-Math.cos(camera.rotation.y) }
+    if (keys.current['s']||keys.current['arrowdown'])  { dx+= Math.sin(camera.rotation.y); dz+= Math.cos(camera.rotation.y) }
+    if (keys.current['a']||keys.current['arrowleft'])  { dx+=-Math.cos(camera.rotation.y); dz+= Math.sin(camera.rotation.y) }
+    if (keys.current['d']||keys.current['arrowright']) { dx+= Math.cos(camera.rotation.y); dz+=-Math.sin(camera.rotation.y) }
     const moved = dx!==0||dz!==0
     if (moved) {
+      const len = Math.sqrt(dx*dx+dz*dz)
+      dx=(dx/len)*SPEED; dz=(dz/len)*SPEED
       posRef.current.x = Math.max(-BOUND, Math.min(BOUND, posRef.current.x+dx))
       posRef.current.z = Math.max(-BOUND, Math.min(BOUND, posRef.current.z+dz))
       targetRotation.current = Math.atan2(dx, dz)
       onMove&&onMove(posRef.current.x, posRef.current.z)
-      stepTimer.current += 0.15
-      if (stepTimer.current>0.5){onStep&&onStep();stepTimer.current=0}
+      stepTimer.current+=0.15
+      if(stepTimer.current>0.5){onStep&&onStep();stepTimer.current=0}
     }
     if (avatarRef?.current) {
-      const cur = avatarRef.current.rotation.y
-      const diff = targetRotation.current - cur
-      const wrapped = ((diff+Math.PI)%(Math.PI*2))-Math.PI
-      avatarRef.current.rotation.y += wrapped*0.12
+      const cur=avatarRef.current.rotation.y
+      const diff=targetRotation.current-cur
+      const wrapped=((diff+Math.PI)%(Math.PI*2))-Math.PI
+      avatarRef.current.rotation.y+=wrapped*0.12
     }
   })
   return null
 }
 
-// ── CAMERA FOLLOWER ────────────────────────────────────────
+// ── CAMERA FOLLOWER ───────────────────────────────────────
 function CameraFollower({ posRef }) {
   const orbitRef = useRef()
   useFrame(() => {
     if (!posRef.current||!orbitRef.current) return
-    orbitRef.current.target.x += (posRef.current.x - orbitRef.current.target.x) * 0.08
-    orbitRef.current.target.z += (posRef.current.z - orbitRef.current.target.z) * 0.08
-    orbitRef.current.target.y = 1.5
+    orbitRef.current.target.x+=(posRef.current.x-orbitRef.current.target.x)*0.08
+    orbitRef.current.target.z+=(posRef.current.z-orbitRef.current.target.z)*0.08
+    orbitRef.current.target.y=1.5
     orbitRef.current.update()
   })
   return (
@@ -324,22 +293,71 @@ function CameraFollower({ posRef }) {
   )
 }
 
-// ── COMPANION DIALOGUE UI ──────────────────────────────────
+// ── VOICE BUTTON ──────────────────────────────────────────
+function VoiceButton({ onResult, color }) {
+  const [listening, setListening] = useState(false)
+  const recognRef = useRef(null)
+
+  function startListening() {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      alert('Browser speech recognition supported nahi hai! Chrome use karo.')
+      return
+    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    const recog = new SR()
+    recog.lang = 'en-US'
+    recog.interimResults = false
+    recog.maxAlternatives = 1
+    recog.onstart = () => setListening(true)
+    recog.onend = () => setListening(false)
+    recog.onresult = (e) => { onResult && onResult(e.results[0][0].transcript) }
+    recog.onerror = () => setListening(false)
+    recognRef.current = recog
+    recog.start()
+  }
+
+  function stopListening() {
+    recognRef.current?.stop()
+    setListening(false)
+  }
+
+  return (
+    <button
+      onMouseDown={startListening} onMouseUp={stopListening}
+      onTouchStart={startListening} onTouchEnd={stopListening}
+      style={{
+        position:'absolute', bottom:20, left:'50%', transform:'translateX(-50%)',
+        width:60, height:60, borderRadius:'50%',
+        background: listening ? `${color}33` : 'rgba(0,0,0,0.85)',
+        border:`2px solid ${listening ? color : 'rgba(255,255,255,0.2)'}`,
+        cursor:'pointer', zIndex:200,
+        display:'flex', alignItems:'center', justifyContent:'center',
+        fontSize:24,
+        boxShadow: listening ? `0 0 25px ${color}` : 'none',
+        transition:'all 0.3s'
+      }}
+    >
+      {listening ? '🎙️' : '🎤'}
+    </button>
+  )
+}
+
+// ── COMPANION DIALOGUE ────────────────────────────────────
 function CompanionDialogue({ message, name, color }) {
   if (!message) return null
   return (
     <div style={{
-      position:'absolute', bottom:120, left:'50%', transform:'translateX(-50%)',
-      background:'rgba(0,0,0,0.85)', border:`1px solid ${color}66`,
-      padding:'14px 24px', maxWidth:500, zIndex:200,
+      position:'absolute', bottom:100, left:'50%', transform:'translateX(-50%)',
+      background:'rgba(0,0,0,0.88)', border:`1px solid ${color}66`,
+      padding:'14px 28px', maxWidth:520, zIndex:200,
       fontFamily:"'Share Tech Mono',monospace",
       boxShadow:`0 0 30px ${color}22`,
-      animation:'fadeIn 0.3s ease'
+      animation:'fadeIn 0.3s ease', whiteSpace:'nowrap'
     }}>
       <div style={{ fontSize:10, color:color, letterSpacing:3, marginBottom:6, textTransform:'uppercase' }}>
         ⬡ {name} · AI COMPANION
       </div>
-      <div style={{ fontSize:13, color:'rgba(200,230,255,0.9)', lineHeight:1.7, letterSpacing:0.5 }}>
+      <div style={{ fontSize:13, color:'rgba(200,230,255,0.9)', lineHeight:1.7, letterSpacing:0.5, whiteSpace:'normal' }}>
         "{message}"
       </div>
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`}</style>
@@ -347,7 +365,7 @@ function CompanionDialogue({ message, name, color }) {
   )
 }
 
-// ── MAIN COMPONENT ─────────────────────────────────────────
+// ── MAIN COMPONENT ────────────────────────────────────────
 export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) {
   const keys = useRef({})
   const myPos = useRef({ x:0, y:0, z:0 })
@@ -360,7 +378,6 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
   const msgTimer = useRef(null)
   const cfg = WORLD_CONFIGS[worldType] || WORLD_CONFIGS.CITY
 
-  // Web Speech API — companion voice
   function speak(text, name) {
     if (!window.speechSynthesis) return
     window.speechSynthesis.cancel()
@@ -369,9 +386,7 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
     utter.pitch = name === 'MIMIR' ? 0.7 : 1.1
     utter.volume = 0.8
     const voices = window.speechSynthesis.getVoices()
-    if (voices.length > 0) {
-      utter.voice = voices.find(v => v.lang.startsWith('en')) || voices[0]
-    }
+    if (voices.length > 0) utter.voice = voices.find(v => v.lang.startsWith('en')) || voices[0]
     window.speechSynthesis.speak(utter)
   }
 
@@ -380,14 +395,31 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
     setCompanionName(name)
     speak(msg, name)
     if (msgTimer.current) clearTimeout(msgTimer.current)
-    msgTimer.current = setTimeout(() => setCompanionMsg(''), 6000)
+    msgTimer.current = setTimeout(() => setCompanionMsg(''), 7000)
   }
 
-  // Greet on entry
+  async function handleVoiceCommand(transcript) {
+    handleCompanionSpeak(`You said: "${transcript}"`, 'YOU')
+    try {
+      const res = await fetch('http://localhost:8080/api/ai/chat/1', {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization':`Bearer ${localStorage.getItem('nexaverse_token')}`
+        },
+        body: JSON.stringify({ message: transcript })
+      })
+      const data = await res.json()
+      const reply = data.data?.response || 'The ancient wisdom is silent...'
+      setTimeout(() => handleCompanionSpeak(reply, cfg.companion.name), 800)
+    } catch (err) {
+      setTimeout(() => handleCompanionSpeak('The connection to the realm is weak, warrior.', cfg.companion.name), 800)
+    }
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      const c = cfg.companion
-      handleCompanionSpeak(c.greetings[0], c.name)
+      handleCompanionSpeak(cfg.companion.greetings[0], cfg.companion.name)
     }, 2000)
     return () => clearTimeout(timer)
   }, [worldType])
@@ -408,21 +440,13 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
     setOtherPlayers(players.filter(p => p.avatarId !== myAvatarId))
   }, [players, myAvatarId])
 
-  const handleMove = useCallback((x,z) => {
-    setMyPosition([x,0,z])
-    onMove&&onMove(x,z)
-  }, [onMove])
-
-  const handleStep = useCallback(() => {
-    playFootstep(worldType==='DESERT'?'sand':worldType==='OCEAN'?'water':'grass')
-  }, [worldType])
-
+  const handleMove = useCallback((x,z) => { setMyPosition([x,0,z]); onMove&&onMove(x,z) }, [onMove])
+  const handleStep = useCallback(() => { playFootstep(worldType==='DESERT'?'sand':worldType==='OCEAN'?'water':'grass') }, [worldType])
   const typeColors = { WARRIOR:'#ff4444', MAGE:'#aa44ff', RANGER:'#44ffaa', ROGUE:'#ffaa00' }
 
   return (
     <div style={{ width:'100%', height:'100%', position:'absolute', inset:0 }}>
       <AmbientSound worldType={worldType} active={true} />
-
       <Canvas
         shadows={false}
         camera={{ position:[0,14,20], fov:68 }}
@@ -440,7 +464,7 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
         <DayNightCycle onTimeUpdate={setTimeOfDay} speed={0.0002} />
         <WeatherSystem weather={cfg.weather} worldType={worldType} />
         <Terrain worldType={worldType} />
-        <gridHelper args={[400, 80, cfg.gridColor, cfg.gridColor2]} position={[0,0.05,0]} />
+        <gridHelper args={[400,80,cfg.gridColor,cfg.gridColor2]} position={[0,0.05,0]} />
 
         {worldType==='FOREST'  && <ForestDecorations />}
         {worldType==='CITY'    && <CityDecorations />}
@@ -449,7 +473,6 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
         {worldType==='OCEAN'   && <OceanDecorations />}
 
         <AICompanion playerPos={myPos} worldType={worldType} onSpeak={handleCompanionSpeak} />
-
         <Avatar position={myPosition} color="#00ffc8" isMe={true} avatarType="WARRIOR" avatarRef={avatarRef} />
         {otherPlayers.map(p => (
           <Avatar key={p.avatarId} position={[p.positionX||0,0,p.positionY||0]} color={typeColors[p.avatarType]||'#0080ff'} isMe={false} avatarType={p.avatarType} />
@@ -459,8 +482,8 @@ export default function WorldRoom3D({ players, myAvatarId, worldType, onMove }) 
         <MovementController keys={keys} posRef={myPos} onMove={handleMove} onStep={handleStep} avatarRef={avatarRef} />
       </Canvas>
 
-      {/* Companion Dialogue */}
       <CompanionDialogue message={companionMsg} name={companionName} color={cfg.companion.color} />
+      <VoiceButton onResult={handleVoiceCommand} color={cfg.companion.color} />
     </div>
   )
 }
